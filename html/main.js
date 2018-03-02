@@ -58,7 +58,7 @@ class Main extends React.Component {
                   lineL.remove();
               })
           })    
-      },Math.floor(Math.random() * 800+500))
+      },Math.floor(Math.random() * 500+500))
   }
   render() {
       return (
