@@ -24,17 +24,47 @@ class Main extends React.Component {
         
         //创建页面中央的容器
         var imgWidth = 200
-        this.container = this.svg.append('g').attr('class','middle-container')
-            .attr("transform","translate("+ this.x/2 + "," + this.y/2 + ")")
-            .append("svg:image")
+        var middleContainer = this.svg.append('g').attr('class','middle-container')
+            .attr("transform","translate("+ this.x/2 + "," + this.y/2 + ")")          
+        var middleImage = middleContainer.append("svg:image")
             .attr("x", -imgWidth/2)
             .attr("y", -imgWidth/2)
-            .attr("class","earth")
+            .attr("class","middle-image")
             .attr("xlink:href","html/img/earth.png")
             .attr("width",imgWidth)
             .attr("height",imgWidth)      
             .attr("text-anchor","middle") 
 
+        //创建轨道
+        var orbitcx = this.x/2
+        var orbitcy = this.y/2
+        var orbitrx = 150
+        var orbitry = 150
+        var orbitContainer = this.svg.append('g').attr('class','orbit-container')
+        var orbit = orbitContainer.append('ellipse')
+            .attr("class","orbit")
+            .attr("cx", orbitcx)
+            .attr("cy", orbitcy)
+            .attr("rx", orbitrx)
+            .attr("ry", orbitry)
+            .style("fill","#3E5968")
+            .style("fill-opacity","0.2")
+            .style("stroke","white")
+            .style("stroke-opacity","0.2")
+
+        //创建环绕的图像
+        var planetWidth = 60
+        var radius = 150
+        var planetContainer = this.svg.append('g').attr('class','planet-container')
+            .attr("transform","translate("+ this.x/2 + "," + this.y/2 + ")")
+        var planet = planetContainer.append("svg:image")
+            .attr("x", -planetWidth/2)
+            .attr("y", radius-planetWidth/2)
+            .attr("class","planet")
+            .attr("xlink:href","html/img/planet.png")
+            .attr("width",planetWidth)  
+            .attr("text-anchor","middle") 
+            
     }
 
     componentDidMount(){
