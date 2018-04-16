@@ -9,16 +9,18 @@ import './styles/main.less'
 class Main extends React.Component {
     constructor(props) {
         super(props);
-
+        this.stopTooltip=true
         this.planets=[
             {
+                "name":"ONE",
                 "orbitR":150,
                 "r":60,
-                "speed":50,
+                "speed":10,
                 "angleStart":180,
                 "imgsrc":"html/img/planet.png"
             },
             {
+                "name":"TWO",
                 "orbitR":250,
                 "r":80,
                 "speed":20,
@@ -74,19 +76,26 @@ class Main extends React.Component {
         });
         //创建星球
         planets.selectAll("g.planet")
-        .data(this.planets).enter()
-        .each(function (d, i) {
-            //创建星球
-            d3.select(this).append("svg:image")
-                .attr("x", -d.r/2)
-                .attr("y", -d.orbitR-d.r/2)
-                .attr("class","planet")
-                .attr("xlink:href",d.imgsrc)
-                .attr("width",d.r)  
-                .attr("height",d.r)  
-                .attr("text-anchor","middle")
-                .attr("opacity","0.7")
-        });
+            .data(this.planets).enter()
+            .each(function (d, i) {
+                //创建星球
+                d3.select(this).append("svg:image")
+                    .attr("x", -d.r/2)
+                    .attr("y", -d.orbitR-d.r/2)
+                    .attr("class","planet")
+                    .attr("xlink:href",d.imgsrc)
+                    .attr("width",d.r)  
+                    .attr("height",d.r)  
+                    .attr("text-anchor","middle")
+                    .attr("opacity","0.7")
+                    .on("mouseover", function() {
+                        self.showTooltip(d)
+                        self.showOrbit(d, i, 1);
+                    })
+                    .on("mouseout", function() {            
+                        self.showOrbit(d, i, 0.7);
+                    })
+            });
 
 
         //让星球转动
@@ -94,18 +103,18 @@ class Main extends React.Component {
             var delta = Date.now() - t0;    //利用时间计算旋转角度
             self.svg.selectAll('.planet')
                 .attr('transform', function (d) {
-                    return 'rotate(' + (d.angleStart + (delta * d.speed )/1000)%360 + ')';
+                    d.theta = (d.angleStart + (delta * d.speed )/1000)%360
+                    return 'rotate(' + d.theta + ')';
                 });
         })
+    }
 
-        // add hover event listener
-        d3.selectAll('.planet')
-            .on("mouseover", function(d, i) {
-                self.showOrbit(d, i, 1);
-            })
-            .on("mouseout", function(d, i) {            
-                self.showOrbit(d, i, 0.7);
-            });
+    /**
+     * Turn degrees into radians
+     * @param {*} angle 
+     */
+    toRadians (angle) { 
+        return angle * (Math.PI / 180)
     }
 
     //Hightlight the total orbit of the hovered over planet
@@ -128,6 +137,66 @@ class Main extends React.Component {
             .style("fill-opacity", opacity/3);
     }	
 
+    /**
+     * Show the tooltip on hover
+     * @param {*} d 
+     */
+    showTooltip(d) {	
+        var self=this
+        self.stopTooltip= false
+        //Set first location of tooltip and change opacity
+        var xpos = self.x/2 + d.orbitR*Math.sin(self.toRadians(d.theta));
+        var ypos = self.y/2 - d.orbitR*Math.cos(self.toRadians(d.theta))-d.r/2;
+        d3.select("#tooltip")
+            .style('top',xpos+"px")
+            .style('left',ypos+"px")
+            .transition().duration(500)
+            .style('opacity',1);
+            
+        //Keep the tooltip moving with the planet, until stopTooltip 
+        //returns true (when the user clicks)
+        d3.timer(function() { 
+            xpos = self.x/2 + d.orbitR*Math.sin(self.toRadians(d.theta));
+            ypos = self.y/2 - d.orbitR*Math.cos(self.toRadians(d.theta))-d.r/2;
+            
+            //Keep changing the location of the tooltip
+            d3.select("#tooltip")
+                .style('top',ypos+"px")
+                .style('left',xpos+"px");
+        
+            //Breaks from the timer function when stopTooltip is changed to true
+            //by another function
+            if (self.stopTooltip == true) {
+                //Hide tooltip
+                d3.select("#tooltip")
+                    .style('opacity',0)
+                    // .call(self.endall, function() { //Move tooltip out of the way
+                    //     d3.select("#tooltip")
+                    //         .style('top',0+"px")
+                    //         .style('left',0+"px");
+                    // });	
+                //Remove show how to close
+                return self.stopTooltip;
+            }
+        });
+    
+        //Change the texts inside the tooltip
+        d3.select("#tooltip .tooltip-title").text("I am planet "+d.name);
+
+        //Replace click event
+        d3.select("svg")
+            .on("click", function(d) {self.stopTooltip = true;});
+    }//showTooltip
+
+    //Taken from https://groups.google.com/forum/#!msg/d3-js/WC_7Xi6VV50/j1HK0vIWI-EJ
+    //Calls a function only after the total transition ends
+    // endall(transition, callback) { 
+    //     var n = 0; 
+    //     transition 
+    //         .each(function() { ++n; }) 
+    //         .each("end", function() { if (!--n) callback.apply(this, arguments); }); 
+    // }
+
     componentDidMount(){
         this.initElements()
     }
@@ -136,6 +205,11 @@ class Main extends React.Component {
         return (
             <div>
                 <div id="planets"></div>
+                <div id="tooltip">
+                    <div id="tooltip-Container">
+                        <div className="tooltip-title"></div>
+                    </div>
+                </div>
             </div>
         )
     }
